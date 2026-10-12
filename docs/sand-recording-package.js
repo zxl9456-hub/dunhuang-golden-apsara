@@ -34,7 +34,7 @@ export async function createRecordingPackage(recording,{resources,checkpoints=[]
   }
   recording.checkpoints=checkpointManifest;
   entries.push({path:'recording.sandrec.json',data:JSON.stringify(recording)});
-  entries.push({path:'README.txt',data:'敦煌壁画粒子动作数据包\n\n这是底层运动数据，不包含摄像头视频。录制时壁画固定正面、停止自旋，保留手势与鼠标扰动。\n\n将整个 ZIP 发给 Codex，可使用原始 GPU 计算规则重放，再烘焙为 Blender 粒子动画。无需另外寻找模型、噪波或 shader。\n\nrecording.sandrec.json：每次实际模拟的输入、时间步、阶段、模型索引与生产 shader。\nassets：壁画的采样坐标、法线、原画颜色、亮度、三维 curl 噪波与来源信息。\ncheckpoints：开始和结束时的真实 GPU 坐标、速度、碎裂标记。若设备读取失败，日志中会明确说明，完整输入仍可重演。\nmanifest.json：每个包内文件的 SHA-256 与字节数（不包含 manifest 本身）。\n\n重放须从首个 uReset=1 的步骤开始，按 steps 顺序重画手势力场、必要的重塑起点拷贝及粒子模拟。不要离线重新判断损伤阈值；使用记录中的真实阶段。矩阵为列主序、坐标为 Three.js 右手 Y-up，Blender 中按 (x,-z,y) 转换。\n'});
+  entries.push({path:'README.txt',data:'敦煌三维飞天粒子动作数据包\n\n这是底层运动数据，不包含摄像头视频。录制时飞天固定正面、停止自旋，保留手势与鼠标扰动。\n\n将整个 ZIP 发给 Codex，可使用原始 GPU 计算规则重放，再烘焙为 Blender 粒子动画。无需另外寻找模型、噪波或 shader。\n\nrecording.sandrec.json：每次实际模拟的输入、时间步、阶段、模型索引与生产 shader。\nassets：三维飞天网格、原画贴图、表面采样坐标、法线、原画颜色、亮度、三维 curl 噪波与来源信息。\ncheckpoints：开始和结束时的真实 GPU 坐标、速度、碎裂标记。若设备读取失败，日志中会明确说明，完整输入仍可重演。\nmanifest.json：每个包内文件的 SHA-256 与字节数（不包含 manifest 本身）。\n\n重放须从首个 uReset=1 的步骤开始，按 steps 顺序重画手势力场、必要的重塑起点拷贝及粒子模拟。不要离线重新判断损伤阈值；使用记录中的真实阶段。矩阵为列主序、坐标为 Three.js 右手 Y-up，Blender 中按 (x,-z,y) 转换。\n'});
   const files=await Promise.all(entries.map(async entry=>({path:entry.path,bytes:bytes(entry.data).byteLength,sha256:await sha256(bytes(entry.data))})));
   const manifest={schema:'golden-sand-data-package',version:1,createdAt:recording.metadata.createdAt,recording:'recording.sandrec.json',
     durationSeconds:recording.summary.simulationSeconds,stepCount:recording.steps.length,particleCount:recording.metadata.count,

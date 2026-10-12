@@ -5,7 +5,7 @@ import {ParticleRecorder,createRecordingManifest,recordingFilename} from './part
 import {createRecordingPackage} from './sand-recording-package.js';
 
 const $=id=>document.getElementById(id),stage=$('stage');
-const state={paused:false,intensity:1.1,turbulence:1.4,speed:1,bloom:.3,autoRotate:false,quality:'auto',rotate:false,clean:false,gold:0};
+const state={paused:false,intensity:1,turbulence:1.4,speed:1,bloom:.3,autoRotate:false,quality:'auto',rotate:false,clean:false,gold:0};
 let renderer,sculpture,yaw=0,pitch=0,drag=null,lastTime=0,recordingBusy=false,recordUrl=null,startCheckpoint=null,resources=null,toastTimer;
 const recorder=new ParticleRecorder({onLimit:()=>stopRecording('limit'),onError:error=>{console.error(error);stopRecording('capture-error');}});
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4400);}
@@ -25,10 +25,14 @@ function resize(){
 }
 async function loadModels(){
   const get=async url=>{const r=await fetch(url);if(!r.ok)throw new Error('素材读取失败 '+r.status+'：'+url);return r.arrayBuffer();};
-  const [samples,noise,tones,colors]=await Promise.all([get('./assets/mural.samples.bin'),get('./assets/curl-noise.bin'),get('./assets/mural.tones.bin'),get('./assets/mural.colors.bin')]);
-  const count=262144;if(samples.byteLength!==count*24||noise.byteLength!==32**3*4)throw new Error('粒子素材不完整');
+  const [samples,noise,tones,colors,mesh,metaBuffer,texture]=await Promise.all([get('./assets/apsara.samples.bin'),get('./assets/curl-noise.bin'),get('./assets/apsara.tones.bin'),get('./assets/apsara.colors.bin'),get('./assets/apsara.mesh.bin'),get('./assets/apsara.mesh.json'),new THREE.TextureLoader().loadAsync('./assets/apsara-color.png')]);
+  const count=262144;if(samples.byteLength!==count*24||noise.byteLength!==32**3*4||tones.byteLength!==count||colors.byteLength!==count*3)throw new Error('粒子素材不完整');
   const positions=new Float32Array(samples,0,count*3),normals=new Float32Array(samples,count*12,count*3);
-  return {tones:new Uint8Array(tones),colors:new Uint8Array(colors),models:[{name:'壁画 · 飞天舞韵',positions,normals},{name:'壁画 · 飞天舞韵',positions,normals}],curlNoise:{size:32,data:new Uint8Array(noise)}};
+  const meta=JSON.parse(new TextDecoder().decode(metaBuffer)),v=meta.vertexCount;
+  if(!Number.isInteger(v)||v<1||!Number.isInteger(meta.indexCount)||mesh.byteLength!==v*40+meta.indexCount*4)throw new Error('三维模型素材不完整');
+  texture.colorSpace=THREE.SRGBColorSpace;texture.flipY=false;texture.needsUpdate=true;
+  const surface={positions:new Float32Array(mesh,0,v*3),normals:new Float32Array(mesh,v*12,v*3),uvs:new Float32Array(mesh,v*24,v*2),lookup:new Float32Array(mesh,v*32,v*2),indices:new Uint32Array(mesh,v*40,meta.indexCount),texture};
+  return {surface,tones:new Uint8Array(tones),colors:new Uint8Array(colors),models:[{name:'三维飞天 · 原画色彩',positions,normals},{name:'三维飞天 · 原画色彩',positions,normals}],curlNoise:{size:32,data:new Uint8Array(noise)}};
 }
 const video=$('camera-video');
 const tracker=new HandTracker(video,(hands,timestamp)=>{
@@ -108,7 +112,7 @@ async function startRecording(){
     resources=new Map();const metadata=await createRecordingManifest(sculpture.getRecordingDescriptor(),{onResource:(p,b)=>resources.set(p,b)});
     if(document.hidden)throw new Error('请回到当前页面后开始录制');
     cancelDrag();setMode(false);setPause(false);yaw=pitch=0;sculpture.setRotation(0,0);sculpture.resetView();sculpture.reset();
-    metadata.initialModelIndex=0;metadata.appearance={toneFile:'assets/mural.tones.bin',colorFile:'assets/mural.colors.bin',colorFormat:'RGB Uint8, sRGB',toneFormat:'Uint8, one luminance per particle',styleAttribute:'aStyle.x = tone / 255; other three channels from createParticleStyle(count)'};metadata.subject='敦煌飞天 · 原画矿彩粒子壁画';recorder.start(metadata);startCheckpoint=null;
+    metadata.initialModelIndex=0;metadata.subject='敦煌飞天 · Hyper3D 原画色彩三维模型';recorder.start(metadata);startCheckpoint=null;
     sculpture.setStepRecorder((uniforms,info)=>{const first=recorder.steps.length===0;recorder.capture(uniforms,info);if(first)startCheckpoint=sculpture.captureRecordingCheckpoint(renderer,0).then(v=>({...v,name:'start'})).catch(e=>({name:'start',error:e.message}));});
     $('record-time').textContent='00:00';$('record-message').textContent='正在记录 · 用鼠标或双手轻拨金沙，最长 90 秒。';document.body.classList.add('recording');
   }catch(error){toast('录制未开始：'+error.message);$('record-message').textContent=error.message;resources=null;}
@@ -137,7 +141,7 @@ async function init(){
   try{
     renderer=new THREE.WebGLRenderer({antialias:false,alpha:true,powerPreference:'high-performance'});renderer.setClearColor(0x000000,0);
     if(!renderer.extensions.has('EXT_color_buffer_float'))throw new Error('浏览器未提供浮点渲染，请使用开启硬件加速的 Chrome 或 Edge');
-    renderer.domElement.setAttribute('aria-label','262144 颗矿彩微尘组成的敦煌飞天壁画');stage.appendChild(renderer.domElement);
+    renderer.domElement.setAttribute('aria-label','原画色彩三维敦煌飞天与 262144 颗表面粒子');stage.appendChild(renderer.domElement);
     renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();setPause(true);tracker.stop();$('loading').hidden=false;$('loading').innerHTML='<p>图形连接中断</p><button id="retry">重新载入</button>';$('retry').onclick=()=>location.reload();});
     sculpture=new SculptureSand({...await loadModels(),onState:setPhase});sculpture.setRotation(0,0);resize();setPhase(sculpture.status);$('loading').hidden=true;
     window.__apsara={get state(){return {...state,phase:sculpture.phase,progress:sculpture.progress,recording:recorder.active};},sculpture,renderer};requestAnimationFrame(animate);

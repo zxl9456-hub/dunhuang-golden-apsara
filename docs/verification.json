@@ -1,32 +1,30 @@
 {
-  "browser": "Codex in-app browser",
-  "desktop": "Original pigment mode and gold mode visually verified",
-  "mobileViewport": [
-    390,
-    844
-  ],
-  "mobile": "Full-page screenshot inspected; artwork and toolbar visible",
-  "controls": [
-    "pointer drag: local damage 6%",
-    "scatter/reassemble",
-    "palette switch",
-    "speed slider",
-    "record start/stop",
-    "reset"
-  ],
-  "consoleErrors": 0,
-  "recording": {
-    "seconds": 30.540099999999743,
-    "steps": 2973,
-    "particles": 262144,
-    "allFileHashesValid": true,
-    "allCheckpointsFinite": true,
-    "endDamagedParticles": 16327,
-    "actualPointerInputRecorded": true
+  "subject": "Hyper3D original-color 3D apsara website",
+  "verifiedAt": "2026-10-12",
+  "modelTriangles": 180000,
+  "particles": 262144,
+  "sourceModelColorTexturePreserved": true,
+  "checks": {
+    "javascriptSyntax": "passed",
+    "browserOriginalColorMesh": "passed",
+    "browserGoldParticles": "passed",
+    "localBrushDamage": "passed",
+    "globalScatterAndRebuildControls": "passed",
+    "mobileViewport": [
+      390,
+      844
+    ],
+    "mobileHorizontalOverflow": false,
+    "browserConsoleErrors": 0,
+    "recordingExport": "passed",
+    "recordingSimulationSeconds": 31.8054,
+    "recordingSteps": 848,
+    "recordingIncludesMeshAndTexture": true,
+    "recordingAllManifestHashesMatch": true,
+    "gpuCheckpointsFinite": true
   },
-  "limits": [
-    "Live webcam hand detection was not tested",
-    "Hardware performance varies",
-    "Model is a flat image-sampled point field, not a reconstructed sculpture"
+  "limitations": [
+    "Static Hyper3D mesh without a skeleton",
+    "Real camera gesture tracking not tested as part of this update"
   ]
 }

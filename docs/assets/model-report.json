@@ -1,26 +1,34 @@
 {
-  "kind": "original mural point field",
-  "depthIsApproximate": false,
-  "geometry": "flat XY plane, Z=0; no relief",
-  "source": "User-supplied 敦煌飞天舞韵.png, not redrawn",
-  "sourceSha256": "0219891ea8a1e588a490aff00041a4ed4411c5e1e417c1d33709df1eb354ed95",
-  "sourceResolution": [
-    1086,
-    1448
-  ],
+  "kind": "Hyper3D textured 3D mesh with surface particles",
+  "sourceModel": "敦煌飞天_原画色彩.glb",
+  "sourceSha256": "848558dfb172df60babf1eba6c98192a33f894ea8a25c938a052ae030d81c777",
+  "generationId": "ddb2fa9b-f1a4-4bde-848f-45b8dabc07de",
+  "webModelSha256": "370938181cbeb3f6a045b9fd2629922f51b62fe4dadd8e5a959f4fa64426daf2",
+  "triangles": 180000,
+  "vertices": 112274,
   "particles": 262144,
-  "particleGrid": [
-    512,
-    512
+  "bounds": [
+    [
+      -1.2596756219863892,
+      -1.600000023841858,
+      -0.5366911888122559
+    ],
+    [
+      1.2596756219863892,
+      1.600000023841858,
+      0.5366911888122559
+    ]
   ],
-  "physicalSize": [
-    2.4000000000000004,
-    3.2
+  "textureResolution": [
+    2048,
+    2048
   ],
   "sampling": {
-    "method": "seeded stratified image sampling",
+    "method": "seeded area-weighted barycentric surface sampling",
     "seed": 20261012
   },
   "coordinateSystem": "Y up, facing +Z",
-  "colorFormat": "RGB Uint8, sRGB, one color per particle"
+  "sourceRotationYDegrees": -90,
+  "originalColor": "Hyper3D shaded emissive texture preserved",
+  "rigged": false
 }

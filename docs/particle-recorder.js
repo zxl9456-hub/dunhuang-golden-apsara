@@ -1,7 +1,7 @@
 // A compact input log: no camera frames and no per-frame GPU readback.
 export const RECORDING_SCHEMA='golden-sand-recording';
 export const RECORDING_VERSION=1;
-const RESOURCE_PATHS=['assets/mural.samples.bin','assets/mural.tones.bin','assets/mural.colors.bin','assets/curl-noise.bin','assets/model-report.json','particle-style.js'];
+const RESOURCE_PATHS=['assets/apsara.samples.bin','assets/apsara.tones.bin','assets/apsara.colors.bin','assets/apsara.mesh.bin','assets/apsara.mesh.json','assets/apsara-color.png','assets/curl-noise.bin','assets/model-report.json','particle-style.js'];
 
 export function snapshotUniforms(uniforms){
   const result={};
@@ -32,7 +32,7 @@ export async function createRecordingManifest(descriptor,{fetchImpl=fetch,onReso
       const response=await fetchImpl(new URL('./'+path,import.meta.url));
       if(!response.ok)throw new Error('录制资源读取失败：'+path);
       const buffer=await response.arrayBuffer();
-      const expected=/\.(json|js)$/.test(path)?null:path.endsWith('curl-noise.bin')?32**3*4:path.endsWith('tones.bin')?descriptor.count:path.endsWith('colors.bin')?descriptor.count*3:descriptor.count*6*4;
+      const expected=path.endsWith('curl-noise.bin')?32**3*4:path.endsWith('tones.bin')?descriptor.count:path.endsWith('colors.bin')?descriptor.count*3:path.endsWith('samples.bin')?descriptor.count*6*4:null;
       if(!buffer.byteLength||(expected!==null&&buffer.byteLength!==expected))throw new Error('录制资源长度不正确：'+path);
       onResource(path,new Uint8Array(buffer));
       return {path,bytes:buffer.byteLength,sha256:await sha256(buffer)};
@@ -47,7 +47,7 @@ export async function createRecordingManifest(descriptor,{fetchImpl=fetch,onReso
       sampleFileLayout:'Float32LE: count*3 XYZ positions, then count*3 XYZ normals; 24 bytes per particle',
       homeTextureLayout:'RGBA32F: sample XYZ + W=1, nearest, clamp-to-edge; normal XYZ is normalized, W=0, fallback=(0,0,1)',
       noiseUpload:'flipY=false, unpackAlignment=1, NoColorSpace, no mipmaps',
-      styleAttribute:'aStyle = createParticleStyle(count, tones); four normalized Uint8 values per particle. aStyle.x is image luminance. aPigment = RGB Uint8 from mural.colors.bin',
+      styleAttribute:'aStyle = createParticleStyle(count, tones); four normalized Uint8 values per particle. aStyle.x is surface texture luminance. aPigment = RGB Uint8 from apsara.colors.bin',
       lookupAttribute:'aLookup = ((i % size + 0.5) / size, (floor(i / size) + 0.5) / size)',
       particleRows:'index = y * size + x; texture row zero is bottom',timebase:'steps contain actual simulation dt; no self-rotation'}};
 }
@@ -64,7 +64,7 @@ export class ParticleRecorder{
     if(!this.active||this.limitSent)return;
     try{
       const values=snapshotUniforms(uniforms);
-      if(!this.steps.length&&values.uReset!==1)throw new Error('录制必须从壁画重置的第一帧开始');
+      if(!this.steps.length&&values.uReset!==1)throw new Error('录制必须从飞天重置的第一帧开始');
       this.simulationTime+=values.uDt;
       this.steps.push({...info,index:this.steps.length,wallTimeMs:this.now()-this.startedAt,simulationTime:this.simulationTime,uniforms:values});
       if(this.elapsedSeconds>=this.maxSeconds||this.steps.length>=this.maxSteps){this.limitSent=true;queueMicrotask(()=>this.onLimit());}

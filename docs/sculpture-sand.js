@@ -204,9 +204,10 @@ const particleVertex = `attribute vec2 aLookup;attribute vec4 aStyle;attribute v
 uniform sampler2D uPositions,uNormals;
 uniform mat4 uModelMatrix;
 uniform float uViewHeight,uReferenceDepth,uIntensity,uBloom,uPhase,uPhaseTime,uPointScale,uMotionTime,uGold;
-varying vec3 vColor;varying vec2 vFacet;
+varying vec3 vColor;varying vec2 vFacet;varying float vDamage;
 void main(){
   vec4 particle=texture2D(uPositions,aLookup);
+  vDamage=particle.w;
   vec3 surface=normalize(mat3(uModelMatrix)*texture2D(uNormals,aLookup).xyz);
   vFacet=aStyle.zw*2.-1.;
   vec3 grainNormal=normalize(vec3(vFacet,.45+aStyle.y));
@@ -233,8 +234,10 @@ void main(){
   float grainSize=(2.05+aStyle.y*.25)*uViewHeight/720.*uPointScale;
   gl_PointSize=clamp(grainSize*uReferenceDepth/max(.35,-mvPosition.z),1.,3.8);
 }`;
-const particleFragment = `varying vec3 vColor;varying vec2 vFacet;
+const particleFragment = `varying vec3 vColor;varying vec2 vFacet;varying float vDamage;
+uniform float uMeshMode,uPhase;
 void main(){
+  if(uMeshMode>.5&&vDamage<.5&&(uPhase<.5||uPhase>2.5))discard;
   vec2 p=gl_PointCoord*2.-1.,q=vec2(dot(p,vFacet),dot(p,vec2(-vFacet.y,vFacet.x)));
   float edge=max(abs(q.x)*.93+abs(q.y)*.30,abs(q.y)*1.06);
   if(edge>.94)discard;
@@ -287,7 +290,7 @@ function dataTexture(values,size){
 }
 
 export class SculptureSand {
-  constructor({models,curlNoise=null,onState=null,tones=null,colors=null}={}){
+  constructor({models,curlNoise=null,onState=null,tones=null,colors=null,surface=null}={}){
     if(!Array.isArray(models)||models.length!==2)throw new Error('SculptureSand requires exactly two sampled models.');
     const count=models[0].positions?.length/3;
     if(!Number.isInteger(count)||count<1)throw new Error('Model positions must contain XYZ samples.');
@@ -346,7 +349,7 @@ export class SculptureSand {
       uDt:{value:1/60},uReset:{value:1},uPoseOnly:{value:0},uPhase:{value:0},uPhaseTime:{value:0},uLocked:{value:0},uMotionTime:{value:0},uScatterKick:{value:0},
       uPreviousPhaseTime:{value:0},uRebuildDuration:{value:REBUILD_TRAVEL_SECONDS},
       uAspect:{value:1},uScreenHeight:{value:3.8},uCount:{value:count},uSize:{value:this.size},uImpact:{value:1.4},
-      uViewHeight:{value:720},uReferenceDepth:{value:5.},uIntensity:{value:1},uBloom:{value:.3},uPointScale:{value:1},uGold:{value:0},
+      uViewHeight:{value:720},uReferenceDepth:{value:5.},uIntensity:{value:1},uBloom:{value:.3},uPointScale:{value:1},uGold:{value:0},uMeshMode:{value:surface?1:0},
     };
     this._fieldMaterial=new THREE.ShaderMaterial({uniforms:this._uniforms,vertexShader:quadVertex,fragmentShader:handFieldFragment,depthTest:false,depthWrite:false});
     this._simulationMaterial=new THREE.ShaderMaterial({uniforms:this._uniforms,vertexShader:quadVertex,fragmentShader:simulationFragment,glslVersion:THREE.GLSL3,depthTest:false,depthWrite:false});
@@ -357,6 +360,22 @@ export class SculptureSand {
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(count*3),3));geometry.setAttribute('aLookup',new THREE.BufferAttribute(lookup,2));geometry.setAttribute('aStyle',new THREE.BufferAttribute(createParticleStyle(count,tones),4,true));geometry.setAttribute('aPigment',new THREE.BufferAttribute(colors??new Uint8Array(count*3).fill(255),3,true));
     this._particleMaterial=new THREE.ShaderMaterial({uniforms:this._uniforms,vertexShader:particleVertex,fragmentShader:particleFragment,depthTest:true,depthWrite:true,transparent:false});
     this._points=new THREE.Points(geometry,this._particleMaterial);this._points.frustumCulled=false;this.scene.add(this._points);
+    if(surface){
+      const meshGeometry=new THREE.BufferGeometry();
+      meshGeometry.setAttribute('position',new THREE.BufferAttribute(surface.positions,3));
+      meshGeometry.setAttribute('normal',new THREE.BufferAttribute(surface.normals,3));
+      meshGeometry.setAttribute('uv',new THREE.BufferAttribute(surface.uvs,2));
+      meshGeometry.setAttribute('aParticleUV',new THREE.BufferAttribute(surface.lookup,2));
+      meshGeometry.setIndex(new THREE.BufferAttribute(surface.indices,1));
+      const material=new THREE.MeshBasicMaterial({map:surface.texture,side:THREE.DoubleSide,toneMapped:false});
+      material.onBeforeCompile=shader=>{
+        shader.uniforms.uParticleState=this._uniforms.uPositions;
+        shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nuniform sampler2D uParticleState; attribute vec2 aParticleUV; varying float vParticleDamage;').replace('#include <begin_vertex>','#include <begin_vertex>\nvParticleDamage=texture2D(uParticleState,aParticleUV).a;');
+        shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vParticleDamage;').replace('#include <color_fragment>','#include <color_fragment>\nif(vParticleDamage>.25)discard;');
+      };
+      material.customProgramCacheKey=()=> 'apsara-original-color-surface-v1';
+      this._surface=new THREE.Mesh(meshGeometry,material);this._surface.matrixAutoUpdate=false;this._surface.frustumCulled=false;this.scene.add(this._surface);
+    }
     this._reductionUniforms={uSource:{value:null},uSourceSize:{value:new THREE.Vector2()},uFirst:{value:1},uCount:{value:count}};
     this._reductionMaterial=new THREE.ShaderMaterial({uniforms:this._reductionUniforms,vertexShader:quadVertex,fragmentShader:reductionFragment,depthTest:false,depthWrite:false});
     this._reductions=[];let reduceSize=this.size;
@@ -390,7 +409,7 @@ export class SculptureSand {
   getRecordingDescriptor(){
     return {count:this.count,size:this.size,models:this._models.map((model,index)=>({index,name:model.name})),
       shaders:{quadVertex,handFieldFragment,captureFragment,simulationFragment,particleVertex,particleFragment},
-      appearance:{colorFile:"assets/mural.colors.bin",toneFile:"assets/mural.tones.bin",aPigment:"RGB Uint8 normalized sRGB, shader pow(2.2)",aStyle:"createParticleStyle(count, tones)"},camera:{fov:this.camera.fov,near:this.camera.near,far:this.camera.far},
+      appearance:{colorFile:"assets/apsara.colors.bin",toneFile:"assets/apsara.tones.bin",aPigment:"RGB Uint8 normalized sRGB, shader pow(2.2)",aStyle:"createParticleStyle(count, tones)",surface:{meshFile:'assets/apsara.mesh.bin',metadataFile:'assets/apsara.mesh.json',textureFile:'assets/apsara-color.png',material:'MeshBasicMaterial, sRGB texture, flipY=false, DoubleSide, toneMapped=false',damage:'interpolate GPU damage at per-vertex aParticleUV; discard fragment above .25',visibility:'original color mode during intact, breaking and settle; particles substitute damaged regions; all particles during scatter and rebuild'}},camera:{fov:this.camera.fov,near:this.camera.near,far:this.camera.far},
       initialViewport:[this._width,this._height,this._ratio],rebuildTravelSeconds:REBUILD_TRAVEL_SECONDS};
   }
   _notify(){if(this.onState)this.onState(this.status);}
@@ -472,8 +491,18 @@ export class SculptureSand {
       if(!input||moving){this._rearm=false;this._notify();}
     }
     this._uniforms.uGold.value=state.gold??0;this._uniforms.uIntensity.value=state.intensity??1;this._uniforms.uBloom.value=state.bloom??.3;this._uniforms.uImpact.value=state.turbulence??1.4;
+    this._syncSurface(state);
     this._uniforms.uPhase.value={intact:0,breaking:0,scatter:1,rebuild:2,settle:3}[this.phase];this._uniforms.uPhaseTime.value=this._cycle.elapsed;
     this._uniforms.uLocked.value=this.collisionLocked?1:0;
+  }
+  _syncSurface(state){
+    if(!this._surface)return;
+    const original=(state.gold??0)<.5,assembled=!['scatter','rebuild'].includes(this.phase);
+    this._uniforms.uMeshMode.value=original?1:0;
+    this._surface.visible=original&&assembled;
+    this._surface.matrix.copy(this._matrix);this._surface.matrixWorldNeedsUpdate=true;
+    this._surface.material.color.setScalar(state.intensity??1);
+    this._points.visible=!original||!assembled||this.progress>0||this._pointer.presence>.001||this.handCount>0;
   }
   step(renderer,now,dt,state={}){
     if(this._disposed||(!this._reset&&state.paused&&!this._rotationDirty))return;
@@ -492,6 +521,7 @@ export class SculptureSand {
     this._uniforms.uPhase.value={intact:0,breaking:0,scatter:1,rebuild:2,settle:3}[this.phase];
     this._uniforms.uPhaseTime.value=this._cycle.elapsed;this._uniforms.uLocked.value=this.collisionLocked?1:0;
     if(event)this._notify();
+    this._syncSurface(state);
     this._motionTime+=simulationDt;this._uniforms.uMotionTime.value=this._motionTime;
     this._uniforms.uDt.value=simulationDt;
     this._uniforms.uScatterKick.value=simulationDt>0&&this.phase==='scatter'&&!this._scatterStarted?1:0;
@@ -549,6 +579,7 @@ export class SculptureSand {
     this._states.forEach(target=>target.dispose());this._rebuildStart.dispose();this._captureMaterial.dispose();this._field.dispose();this._reductions.forEach(target=>target.dispose());
     this._models.forEach(model=>{model.positions.dispose();model.normals.dispose();});
     this._curlTexture.dispose();
+    if(this._surface){this._surface.geometry.dispose();this._surface.material.map.dispose();this._surface.material.dispose();}
     this._points.geometry.dispose();this._particleMaterial.dispose();this._quad.geometry.dispose();this._fieldMaterial.dispose();this._simulationMaterial.dispose();this._reductionMaterial.dispose();
   }
 }

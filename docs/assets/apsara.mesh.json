@@ -1,0 +1,10 @@
+{
+  "vertexCount": 112274,
+  "indexCount": 540000,
+  "texture": "assets/apsara-color.png",
+  "layout": "Float32LE: XYZ positions, XYZ normals, UV, particle lookup UV; then Uint32LE indices",
+  "front": "+Z",
+  "colorSpace": "sRGB",
+  "flipY": false,
+  "damageThreshold": 0.25
+}
