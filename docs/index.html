@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0c0c0b"><meta name="description" content="以敦煌原画构成的交互粒子壁画。保留矿彩色泽，也可切换金沙演绎，拨动、聚散、记录每一次相遇。">
+  <title>金沙 · 敦煌飞天</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='16' fill='none' stroke='%23cda86c'/%3E%3Cpath d='M10 24Q20 2 30 24Q20 14 10 24' fill='%23cda86c'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js"}}</script>
+  <script type="module" src="main.js"></script>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="site-header ui">
+    <a class="brand" href="./" aria-label="金沙敦煌飞天首页"><span class="brand-symbol">◈</span><span>敦煌 <i>·</i> 流沙<small>DUNHUANG IN SANDS</small></span></a>
+    <nav aria-label="作品导航"><button id="artwork" class="nav-active" aria-pressed="true">矿彩壁画<span>01</span></button><button id="gold-mode" aria-pressed="false">金沙演绎<span>02</span></button><button id="reference">参考原画 <span>↗</span></button></nav>
+    <button id="fullscreen" class="icon-button" title="全屏欣赏" aria-label="全屏欣赏">⛶</button>
+  </header>
+  <main>
+    <div id="stage" aria-label="敦煌飞天壁画粒子交互区域"><div class="orbit-ring" aria-hidden="true"></div><div id="loading" role="status"><span class="loading-ring"></span><p>壁画正在凝聚</p><small>载入原画的矿彩微尘…</small></div></div>
+    <section class="introduction ui">
+      <p class="eyebrow"><span></span> INTERACTIVE MURAL · Nº 001</p>
+      <h1>壁上千年<br>指间<span>飞天</span></h1>
+      <p class="english-title">A MURAL, A THOUSAND YEARS</p>
+      <p class="intro-text">石青与赭红，留住壁画的千年。<br>指尖轻拨，让飞天散落又归来。</p>
+      <div class="state-line"><span id="state-dot"></span><span id="phase">飞天 · 静候触碰</span></div>
+      <div class="fracture-track" role="progressbar" aria-label="金沙拨散比例" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="fracture-fill"></span></div>
+      <div class="work-caption"><span>飞天舞韵</span><small>原画矿彩 / 交互粒子壁画</small></div>
+    </section>
+    <div class="vertical-note ui" aria-hidden="true">流 沙 有 形 · 舞 韵 无 界</div>
+    <div class="stage-note ui"><span id="count-label">262,144</span> <span>颗微尘 · 一幅壁画</span></div>
+    <aside id="settings-panel" class="panel ui" hidden aria-label="效果设置">
+      <div class="panel-header"><span>调息金沙</span><button id="settings-close" class="icon-button" aria-label="关闭设置">×</button></div>
+      <label>金光 <output id="intensity-value">1.00</output><input id="intensity" type="range" min="0.4" max="2" step="0.05" value="1"></label>
+      <label>拨沙力度 <output id="turbulence-value">1.40</output><input id="turbulence" type="range" min="0.2" max="3" step="0.1" value="1.4"></label>
+      <label>流动速度 <output id="speed-value">1.00</output><input id="speed" type="range" min="0.2" max="2" step="0.1" value="1"></label>
+      <label>细碎闪光 <output id="bloom-value">0.30</output><input id="bloom" type="range" min="0" max="1" step="0.05" value="0.3"></label>
+      <label class="switch-line">缓缓转动<button id="auto-rotate" class="switch" aria-pressed="false" aria-label="缓缓转动"><span></span></button></label>
+      <label class="select-line">画质<select id="quality"><option value="auto">自适应</option><option value="high">精细</option><option value="low">流畅</option></select></label>
+      <p class="panel-note">摄像头识别在本机运行，<br>只记录粒子运动，不录摄像头画面。</p>
+    </aside>
+    <aside id="record-panel" class="panel record-panel ui" hidden aria-label="粒子数据录制">
+      <div class="panel-header"><span>留住这一次起舞</span><button id="record-close" class="icon-button" aria-label="关闭录制面板">×</button></div>
+      <p>记录粒子的运动与交互输入，<br>导出完整数据包，用于后续重放。</p>
+      <div class="record-time"><span id="record-light"></span><strong id="record-time">00:00</strong><small>/ 01:30</small></div>
+      <button id="record-toggle" class="primary-button">开始录制</button>
+      <p id="record-message" role="status">录制将恢复正面视角并锁定镜头。</p>
+      <a id="record-download" class="text-link" hidden>再次下载数据包 ↗</a>
+    </aside>
+    <div id="camera-preview" class="ui" hidden><video id="camera-video" autoplay muted playsinline></video><span id="camera-message">正在识别双手</span></div>
+    <div id="toast" role="status" hidden></div>
+  </main>
+  <footer class="ui">
+    <div class="footer-detail"><span class="tiny-diamond">◇</span><span>以微尘，见永恒。<small>INSPIRED BY DUNHUANG</small></span></div>
+    <div class="interaction-dock" role="toolbar" aria-label="粒子交互工具">
+      <div class="mode-group"><button id="brush" class="selected" aria-pressed="true"><span>✧</span>拨沙</button><button id="rotate" aria-pressed="false"><span>⟳</span>转像</button></div>
+      <span class="dock-divider"></span>
+      <button id="disperse"><span>⁙</span>散作金沙</button><button id="reassemble"><span>◇</span>聚沙成形</button>
+      <span class="dock-divider"></span>
+      <button id="reset" class="dock-icon" aria-label="重置壁画" title="重置壁画 / R">↺</button><button id="play" class="dock-icon" aria-label="暂停" title="暂停 / 空格">Ⅱ</button><button id="settings" class="dock-icon" aria-label="效果设置" title="效果设置">☷</button>
+    </div>
+    <div class="right-actions"><button id="camera-toggle" title="开启摄像头双手交互">◎<span>手势</span></button><button id="record" title="录制粒子数据">○<span>录制</span></button></div>
+    <p id="interaction-hint">按住拖动拨沙 <span>·</span> 右键转像 <span>·</span> 滚轮缩放</p>
+  </footer>
+  <button id="show-ui" hidden aria-label="显示界面">显示界面 · H</button>
+  <dialog id="reference-dialog"><button id="reference-close" class="dialog-close" aria-label="关闭原画">×</button><img src="assets/reference.png" alt="用户提供的敦煌飞天舞韵原画"><div><p class="eyebrow">THE INSPIRATION</p><h2>敦煌飞天舞韵</h2><p>抬臂、回眸、丝带流转。<br>将壁画中的一瞬，化为可触碰的金沙。</p><small>参考图由用户提供。作品直接采样原画的颜色与位置，以平面粒子重现完整壁画。</small><a class="text-link" href="assets/reference.png" download>下载参考原画 · PNG ↗</a></div></dialog>
+  <noscript>请启用 JavaScript 以体验金沙交互。</noscript>
+</body>
+</html>

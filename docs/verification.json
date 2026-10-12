@@ -1,0 +1,32 @@
+{
+  "browser": "Codex in-app browser",
+  "desktop": "Original pigment mode and gold mode visually verified",
+  "mobileViewport": [
+    390,
+    844
+  ],
+  "mobile": "Full-page screenshot inspected; artwork and toolbar visible",
+  "controls": [
+    "pointer drag: local damage 6%",
+    "scatter/reassemble",
+    "palette switch",
+    "speed slider",
+    "record start/stop",
+    "reset"
+  ],
+  "consoleErrors": 0,
+  "recording": {
+    "seconds": 30.540099999999743,
+    "steps": 2973,
+    "particles": 262144,
+    "allFileHashesValid": true,
+    "allCheckpointsFinite": true,
+    "endDamagedParticles": 16327,
+    "actualPointerInputRecorded": true
+  },
+  "limits": [
+    "Live webcam hand detection was not tested",
+    "Hardware performance varies",
+    "Model is a flat image-sampled point field, not a reconstructed sculpture"
+  ]
+}

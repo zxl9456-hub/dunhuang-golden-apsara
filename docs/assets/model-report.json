@@ -1,0 +1,26 @@
+{
+  "kind": "original mural point field",
+  "depthIsApproximate": false,
+  "geometry": "flat XY plane, Z=0; no relief",
+  "source": "User-supplied 敦煌飞天舞韵.png, not redrawn",
+  "sourceSha256": "0219891ea8a1e588a490aff00041a4ed4411c5e1e417c1d33709df1eb354ed95",
+  "sourceResolution": [
+    1086,
+    1448
+  ],
+  "particles": 262144,
+  "particleGrid": [
+    512,
+    512
+  ],
+  "physicalSize": [
+    2.4000000000000004,
+    3.2
+  ],
+  "sampling": {
+    "method": "seeded stratified image sampling",
+    "seed": 20261012
+  },
+  "coordinateSystem": "Y up, facing +Z",
+  "colorFormat": "RGB Uint8, sRGB, one color per particle"
+}
