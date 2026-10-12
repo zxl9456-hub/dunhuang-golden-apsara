@@ -33,6 +33,19 @@ jobs:
             git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Add complete Dunhuang mural website source'
             git push origin HEAD:main
           fi
+      - name: Apply 3D model website update
+        shell: bash
+        run: |
+          if [ -f site-update.zip ]; then
+            test -f site-model.zip
+            unzip -oq site-update.zip -d docs
+            unzip -oq site-model.zip -d docs
+            git rm --ignore-unmatch docs/assets/mural.samples.bin docs/assets/mural.colors.bin docs/assets/mural.tones.bin docs/tools/build-mural.py
+            git rm site-update.zip site-model.zip
+            git add docs
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Replace mural with original-color Hyper3D model'
+            git push origin HEAD:main
+          fi
       - name: Check website JavaScript
         run: |
           node --check docs/main.js
