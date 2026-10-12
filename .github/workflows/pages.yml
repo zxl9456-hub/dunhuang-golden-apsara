@@ -1,0 +1,56 @@
+name: Publish Dunhuang Mural
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Expand initial website source
+        shell: bash
+        run: |
+          if [ -f site-source.zip ]; then
+            test ! -e docs/index.html
+            mkdir -p docs
+            unzip -q site-source.zip -d docs
+            test -f docs/index.html
+            git rm site-source.zip
+            git add docs
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Add complete Dunhuang mural website source'
+            git push origin HEAD:main
+          fi
+      - name: Check website JavaScript
+        run: |
+          node --check docs/main.js
+          node --check docs/sculpture-sand.js
+          node --check docs/particle-recorder.js
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish website
+        id: deployment
+        uses: actions/deploy-pages@v4
