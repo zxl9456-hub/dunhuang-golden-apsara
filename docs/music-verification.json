@@ -1,0 +1,28 @@
+{
+  "feature": "classical guqin BGM",
+  "track": "阳关三叠",
+  "audioSeconds": 350.132245,
+  "audioBytes": 8035400,
+  "checks": {
+    "mp3DecodedWithoutErrors": true,
+    "javascriptSyntax": true,
+    "startsPausedAndUnloaded": true,
+    "explicitClickStartsPlayback": true,
+    "mediaReadyState": 4,
+    "mediaTimeAdvances": true,
+    "pause": true,
+    "muteAndUnmute": true,
+    "volumeSlider": true,
+    "keyboardM": true,
+    "buttonSpace": true,
+    "loopEnabled": true,
+    "mobileViewport": [
+      390,
+      844
+    ],
+    "mobileHorizontalOverflow": false,
+    "mobilePanelFitsViewport": true,
+    "browserConsoleErrors": 0
+  },
+  "sourceCredit": "assets/music-credit.json"
+}

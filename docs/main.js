@@ -100,7 +100,7 @@ $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await docume
 $('reference').onclick=()=>$('reference-dialog').showModal();$('reference-close').onclick=()=>$('reference-dialog').close();
 $('reference-dialog').onclick=e=>{if(e.target===$('reference-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}};
 function clean(){state.clean=!state.clean;document.body.classList.toggle('clean',state.clean);$('show-ui').hidden=!state.clean;}$('show-ui').onclick=clean;
-document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||$('reference-dialog').open)return;if(e.code==='Space'){e.preventDefault();if(!recorder.active)setPause(!state.paused);}else if(e.key.toLowerCase()==='r')reset();else if(e.key.toLowerCase()==='h')clean();});
+document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||$('reference-dialog').open)return;if(e.code==='Space'){if(e.target.closest('button,a'))return;e.preventDefault();if(!recorder.active)setPause(!state.paused);}else if(e.key.toLowerCase()==='r')reset();else if(e.key.toLowerCase()==='h')clean();});
 function lockControls(locked){
   ['artwork','gold-mode','reset','brush','rotate','disperse','reassemble','play','settings','fullscreen','intensity','turbulence','speed','bloom','quality','auto-rotate'].forEach(id=>$(id).disabled=locked);
   $('record-toggle').disabled=recordingBusy;$('record-toggle').textContent=recordingBusy?'正在处理…':recorder.active?'停止并保存':'开始录制';

@@ -8,15 +8,26 @@
   <link rel="stylesheet" href="style.css">
   <script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js"}}</script>
   <script type="module" src="main.js"></script>
+  <script type="module" src="music.js"></script>
 </head>
 <body>
   <div class="grain" aria-hidden="true"></div>
   <header class="site-header ui">
     <a class="brand" href="./" aria-label="金沙敦煌飞天首页"><span class="brand-symbol">◈</span><span>敦煌 <i>·</i> 流沙<small>DUNHUANG IN SANDS</small></span></a>
     <nav aria-label="作品导航"><button id="artwork" class="nav-active" aria-pressed="true">原画模型<span>01</span></button><button id="gold-mode" aria-pressed="false">金沙演绎<span>02</span></button><button id="reference">参考原画 <span>↗</span></button></nav>
-    <button id="fullscreen" class="icon-button" title="全屏欣赏" aria-label="全屏欣赏">⛶</button>
+    <div class="header-actions"><button id="music-toggle" class="music-toggle" aria-label="播放背景音乐" aria-pressed="false" aria-expanded="false" aria-controls="music-panel" title="播放《阳关三叠》 / M"><span class="music-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="music-label">乐声</span></button><button id="fullscreen" class="icon-button" title="全屏欣赏" aria-label="全屏欣赏">⛶</button></div>
   </header>
   <main>
+    <audio id="bgm" src="assets/yangguan-sandie.mp3" preload="none" loop></audio>
+    <aside id="music-panel" class="panel music-panel ui" hidden aria-label="飞天背景音乐">
+      <div class="panel-header"><span>听见丝路</span><button id="music-close" class="icon-button" aria-label="关闭音乐面板">×</button></div>
+      <p class="music-kicker">古琴 · 经典名曲</p><h2>阳关三叠</h2>
+      <p class="music-description">一曲阳关，伴飞天轻舞。</p>
+      <button id="music-play" class="primary-button" aria-label="播放配乐">播放配乐</button>
+      <label class="music-volume-label">音量 <output id="music-volume-value">35%</output><input id="music-volume" type="range" min="0" max="100" step="1" value="35" aria-label="背景音乐音量"></label>
+      <div class="music-controls"><span id="music-status" role="status">点击播放，让乐声伴飞天起舞</span><button id="music-mute" aria-label="静音配乐" aria-pressed="false">静音</button></div>
+      <p class="music-credit">演奏：Charlie Huang<br><a href="https://commons.wikimedia.org/wiki/File:Guqin-Yangguan_Sandie.ogg" target="_blank" rel="noopener noreferrer">录音来源 ↗</a> · <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a></p>
+    </aside>
     <div id="stage" aria-label="敦煌飞天三维模型交互区域"><div class="orbit-ring" aria-hidden="true"></div><div id="loading" role="status"><span class="loading-ring"></span><p>飞天正在凝聚</p><small>载入三维模型与原画色彩…</small></div></div>
     <section class="introduction ui">
       <p class="eyebrow"><span></span> INTERACTIVE SCULPTURE · Nº 001</p>
